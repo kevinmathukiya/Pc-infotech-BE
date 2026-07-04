@@ -1,0 +1,1225 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "PC INFOTECH REST API",
+    "version": "1.0.0",
+    "description": "Complete backend API for PC INFOTECH – Client Website and Admin Panel",
+    "contact": {
+      "name": "PC INFOTECH",
+      "email": "admin@pcinfotech.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api/v1",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": true },
+          "message": { "type": "string" },
+          "data": { "type": "object" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "message": { "type": "string" },
+          "errors": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "Branch": {
+        "type": "object",
+        "properties": {
+          "_id": { "type": "string", "example": "60d0fe4f5311236168a109ca" },
+          "name": { "type": "string", "example": "Surat (Head Office)" },
+          "branchType": { "type": "string", "example": "head_office" },
+          "address": { "type": "string", "example": "103, 104 Green Plaza, New Adajan Road" },
+          "city": { "type": "string", "example": "Surat" },
+          "state": { "type": "string", "example": "Gujarat" },
+          "pincode": { "type": "string", "example": "395009" },
+          "region": { "type": "string", "example": "GUJARAT REGION" },
+          "phoneNumber": { "type": "string", "example": "+91 99254 35034" },
+          "email": { "type": "string", "format": "email", "example": "surat@pcinfotech.com" },
+          "googleMapUrl": { "type": "string", "example": "https://maps.google.com/..." },
+          "workingHours": { "type": "string", "example": "10:00 AM - 8:00 PM" },
+          "supportScope": { "type": "string", "example": "Main service laboratory. Complete logic-board repairing..." },
+          "status": { "type": "string", "enum": ["active", "inactive"] },
+          "latitude": { "type": "number", "example": 21.1702 },
+          "longitude": { "type": "number", "example": 72.8311 },
+          "location": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "example": "Point" },
+              "coordinates": {
+                "type": "array",
+                "items": { "type": "number" },
+                "example": [72.8311, 21.1702]
+              }
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ],
+  "tags": [
+    { "name": "Auth", "description": "Admin authentication and password operations" },
+    { "name": "Brands", "description": "Brand CRUD and listing operations" },
+    { "name": "Categories", "description": "Product category configuration" },
+    { "name": "Products", "description": "Product inventory and catalog operations" },
+    { "name": "Services", "description": "Repair and maintenance services" },
+    { "name": "Branches", "description": "Branch locations contact details" },
+    { "name": "Service Requests", "description": "Client-raised repair and service tickets" },
+    { "name": "Blogs", "description": "CMS articles and blog postings" },
+    { "name": "Testimonials", "description": "Customer feedback testimonials" },
+    { "name": "CMS", "description": "Homepage layout slider and text content builder" },
+    { "name": "Contact", "description": "Contact form inquiry operations" }
+  ],
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Admin Login",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "admin@pcinfotech.com" },
+                  "password": { "type": "string", "example": "AdminPassWord123!" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Successfully authenticated" },
+          "401": { "description": "Unauthorized - invalid credentials" }
+        }
+      }
+    },
+    "/auth/refresh-token": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh Access Token",
+        "description": "Uses Refresh Token Rotation (RTR) via HTTP-only cookie or request body.",
+        "security": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Access token successfully refreshed" },
+          "400": { "description": "Bad Request - token missing" },
+          "403": { "description": "Forbidden - token revoked/reused" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Log out from Admin session",
+        "responses": {
+          "200": { "description": "Session terminated successfully" }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Request Password Reset Link",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "admin@pcinfotech.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Reset token generated successfully" },
+          "404": { "description": "Admin email not found" }
+        }
+      }
+    },
+    "/auth/reset-password/{token}": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Reset Admin Password using Token",
+        "security": [],
+        "parameters": [
+          { "name": "token", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["password"],
+                "properties": {
+                  "password": { "type": "string", "minLength": 6, "example": "NewPassWord123!" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password reset successful" },
+          "400": { "description": "Invalid or expired token" }
+        }
+      }
+    },
+    "/auth/change-password": {
+      "patch": {
+        "tags": ["Auth"],
+        "summary": "Change Current Admin Password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["currentPassword", "newPassword"],
+                "properties": {
+                  "currentPassword": { "type": "string" },
+                  "newPassword": { "type": "string", "minLength": 6 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password successfully updated" },
+          "400": { "description": "Invalid current password" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Get Authenticated Admin Profile Info",
+        "responses": {
+          "200": { "description": "Current admin account data returned" }
+        }
+      }
+    },
+    "/brands": {
+      "get": {
+        "tags": ["Brands"],
+        "summary": "Get All Brands",
+        "security": [],
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["active", "inactive"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "List of brands" }
+        }
+      },
+      "post": {
+        "tags": ["Brands"],
+        "summary": "Add Brand (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "description", "logo", "banner"],
+                "properties": {
+                  "name": { "type": "string", "example": "HP" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"], "default": "active" },
+                  "logo": { "type": "string", "format": "binary" },
+                  "banner": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Brand created successfully" }
+        }
+      }
+    },
+    "/brands/{slug}": {
+      "get": {
+        "tags": ["Brands"],
+        "summary": "Get Brand Details by Slug",
+        "security": [],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Brand details returned" },
+          "404": { "description": "Brand not found" }
+        }
+      }
+    },
+    "/brands/{id}": {
+      "put": {
+        "tags": ["Brands"],
+        "summary": "Update Brand details (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"] },
+                  "logo": { "type": "string", "format": "binary" },
+                  "banner": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Brand updated successfully" },
+          "404": { "description": "Brand not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Brands"],
+        "summary": "Soft Delete Brand (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Brand soft-deleted successfully" },
+          "404": { "description": "Brand not found" }
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Get All Categories",
+        "security": [],
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "brand", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "List of categories" }
+        }
+      },
+      "post": {
+        "tags": ["Categories"],
+        "summary": "Add Category (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["brand", "name"],
+                "properties": {
+                  "brand": { "type": "string", "description": "Brand MongoDB ID reference" },
+                  "name": { "type": "string", "example": "Laptops" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"], "default": "active" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Category created successfully" }
+        }
+      }
+    },
+    "/categories/{id}": {
+      "put": {
+        "tags": ["Categories"],
+        "summary": "Edit Category (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "brand": { "type": "string" },
+                  "name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Category updated successfully" }
+        }
+      },
+      "delete": {
+        "tags": ["Categories"],
+        "summary": "Soft Delete Category (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Category soft-deleted successfully" }
+        }
+      }
+    },
+    "/products": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Get Product List",
+        "description": "Clients and Admins retrieve product listings. Supports advanced search, pagination, and multi-field filters.",
+        "security": [],
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "brand", "in": "query", "schema": { "type": "string" } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "price[gte]", "in": "query", "schema": { "type": "number" } },
+          { "name": "price[lte]", "in": "query", "schema": { "type": "number" } },
+          { "name": "isFeatured", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "isNewArrival", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "isBestSeller", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["active", "inactive"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 12 } },
+          { "name": "sort", "in": "query", "schema": { "type": "string", "example": "-createdAt" } }
+        ],
+        "responses": {
+          "200": { "description": "Matching products returned" }
+        }
+      },
+      "post": {
+        "tags": ["Products"],
+        "summary": "Add Product (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["brand", "category", "name", "modelNumber", "sku", "shortDescription", "fullDescription", "warranty", "price", "stockQuantity", "thumbnail", "images"],
+                "properties": {
+                  "brand": { "type": "string" },
+                  "category": { "type": "string" },
+                  "name": { "type": "string" },
+                  "modelNumber": { "type": "string" },
+                  "sku": { "type": "string" },
+                  "shortDescription": { "type": "string" },
+                  "fullDescription": { "type": "string" },
+                  "specifications": { "type": "string", "description": "JSON stringified: Array of {key, value}" },
+                  "features": { "type": "string", "description": "JSON stringified: Array of string" },
+                  "warranty": { "type": "string" },
+                  "price": { "type": "number" },
+                  "discountPrice": { "type": "number" },
+                  "stockQuantity": { "type": "integer", "default": 0 },
+                  "status": { "type": "string", "enum": ["active", "inactive"], "default": "active" },
+                  "isFeatured": { "type": "boolean", "default": false },
+                  "isNewArrival": { "type": "boolean", "default": false },
+                  "isBestSeller": { "type": "boolean", "default": false },
+                  "metaTitle": { "type": "string" },
+                  "metaDescription": { "type": "string" },
+                  "thumbnail": { "type": "string", "format": "binary", "description": "Thumbnail display image" },
+                  "images": { "type": "array", "items": { "type": "string", "format": "binary" }, "description": "Main gallery images (up to 10)" },
+                  "brochure": { "type": "string", "format": "binary", "description": "Product PDF brochure file" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Product created successfully" }
+        }
+      }
+    },
+    "/products/{slug}": {
+      "get": {
+        "tags": ["Products"],
+        "summary": "Get Product Details by Slug",
+        "security": [],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Product data populated with Brand & Category" },
+          "404": { "description": "Product not found" }
+        }
+      }
+    },
+    "/products/{id}": {
+      "put": {
+        "tags": ["Products"],
+        "summary": "Edit Product details (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "brand": { "type": "string" },
+                  "category": { "type": "string" },
+                  "name": { "type": "string" },
+                  "modelNumber": { "type": "string" },
+                  "sku": { "type": "string" },
+                  "shortDescription": { "type": "string" },
+                  "fullDescription": { "type": "string" },
+                  "specifications": { "type": "string" },
+                  "features": { "type": "string" },
+                  "warranty": { "type": "string" },
+                  "price": { "type": "number" },
+                  "discountPrice": { "type": "number" },
+                  "stockQuantity": { "type": "integer" },
+                  "status": { "type": "string", "enum": ["active", "inactive"] },
+                  "isFeatured": { "type": "boolean" },
+                  "isNewArrival": { "type": "boolean" },
+                  "isBestSeller": { "type": "boolean" },
+                  "metaTitle": { "type": "string" },
+                  "metaDescription": { "type": "string" },
+                  "thumbnail": { "type": "string", "format": "binary" },
+                  "images": { "type": "array", "items": { "type": "string", "format": "binary" } },
+                  "brochure": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Product updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Products"],
+        "summary": "Soft Delete Product (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Product soft-deleted successfully" }
+        }
+      }
+    },
+    "/services": {
+      "get": {
+        "tags": ["Services"],
+        "summary": "Get Services List",
+        "security": [],
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "brand", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "Services list" }
+        }
+      },
+      "post": {
+        "tags": ["Services"],
+        "summary": "Add Service (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "serviceCategory", "shortDescription", "fullDescription", "image"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "brand": { "type": "string", "description": "Optional Brand reference" },
+                  "serviceCategory": { "type": "string", "example": "Laptop Service" },
+                  "shortDescription": { "type": "string" },
+                  "fullDescription": { "type": "string" },
+                  "benefits": { "type": "string", "description": "JSON stringified Array of string" },
+                  "features": { "type": "string", "description": "JSON stringified Array of string" },
+                  "faq": { "type": "string", "description": "JSON stringified: Array of {question, answer}" },
+                  "status": { "type": "string", "enum": ["active", "inactive"], "default": "active" },
+                  "metaTitle": { "type": "string" },
+                  "metaDescription": { "type": "string" },
+                  "image": { "type": "string", "format": "binary" },
+                  "gallery": { "type": "array", "items": { "type": "string", "format": "binary" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Service created successfully" }
+        }
+      }
+    },
+    "/services/{slug}": {
+      "get": {
+        "tags": ["Services"],
+        "summary": "Get Service Details by Slug",
+        "security": [],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Service item details returned" },
+          "404": { "description": "Service not found" }
+        }
+      }
+    },
+    "/services/{id}": {
+      "put": {
+        "tags": ["Services"],
+        "summary": "Edit Service details (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "brand": { "type": "string" },
+                  "serviceCategory": { "type": "string" },
+                  "shortDescription": { "type": "string" },
+                  "fullDescription": { "type": "string" },
+                  "benefits": { "type": "string" },
+                  "features": { "type": "string" },
+                  "faq": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"] },
+                  "metaTitle": { "type": "string" },
+                  "metaDescription": { "type": "string" },
+                  "image": { "type": "string", "format": "binary" },
+                  "gallery": { "type": "array", "items": { "type": "string", "format": "binary" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Service updated successfully" }
+        }
+      },
+      "delete": {
+        "tags": ["Services"],
+        "summary": "Soft Delete Service (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Service soft-deleted" }
+        }
+      }
+    },
+    "/branches": {
+      "get": {
+        "tags": ["Branches"],
+        "summary": "Get All Branches",
+        "security": [],
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "city", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branch offices list retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Branches retrieved successfully" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "branches": {
+                          "type": "array",
+                          "items": { "$ref": "#/components/schemas/Branch" }
+                        },
+                        "total": { "type": "integer", "example": 2 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Branches"],
+        "summary": "Add Branch (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "branchType", "address", "city", "state", "pincode", "region", "phoneNumber", "email", "googleMapUrl", "workingHours", "supportScope"],
+                "properties": {
+                  "name": { "type": "string", "example": "Surat (Head Office)" },
+                  "branchType": { "type": "string", "example": "head_office" },
+                  "address": { "type": "string" },
+                  "city": { "type": "string" },
+                  "state": { "type": "string" },
+                  "pincode": { "type": "string", "maxLength": 6 },
+                  "region": { "type": "string", "example": "GUJARAT REGION" },
+                  "phoneNumber": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "googleMapUrl": { "type": "string" },
+                  "workingHours": { "type": "string", "example": "10:00 AM - 8:00 PM (Monday - Saturday)" },
+                  "supportScope": { "type": "string", "example": "Main service laboratory. Complete logic-board repairing..." },
+                  "status": { "type": "string", "enum": ["active", "inactive"], "default": "active" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Branch created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Branch created successfully" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "branch": { "$ref": "#/components/schemas/Branch" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/branches/{id}": {
+      "put": {
+        "tags": ["Branches"],
+        "summary": "Edit Branch details (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "branchType": { "type": "string" },
+                  "address": { "type": "string" },
+                  "city": { "type": "string" },
+                  "state": { "type": "string" },
+                  "pincode": { "type": "string" },
+                  "region": { "type": "string" },
+                  "phoneNumber": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "googleMapUrl": { "type": "string" },
+                  "workingHours": { "type": "string" },
+                  "supportScope": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Branch updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "message": { "type": "string", "example": "Branch updated successfully" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "branch": { "$ref": "#/components/schemas/Branch" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Branches"],
+        "summary": "Soft Delete Branch (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Branch soft-deleted successfully" }
+        }
+      }
+    },
+    "/service-requests": {
+      "post": {
+        "tags": ["Service Requests"],
+        "summary": "Raise Service Request (Client)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["customerName", "mobileNumber", "email", "productName", "brand", "modelNumber", "serialNumber", "problemDescription", "preferredVisitDate", "address"],
+                "properties": {
+                  "customerName": { "type": "string" },
+                  "mobileNumber": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "productName": { "type": "string" },
+                  "brand": { "type": "string" },
+                  "modelNumber": { "type": "string" },
+                  "serialNumber": { "type": "string" },
+                  "problemDescription": { "type": "string" },
+                  "preferredVisitDate": { "type": "string", "format": "date", "description": "YYYY-MM-DD" },
+                  "address": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Service request submitted" }
+        }
+      },
+      "get": {
+        "tags": ["Service Requests"],
+        "summary": "View Requests (Admin)",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["pending", "in_progress", "completed", "cancelled"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "List of service tickets" }
+        }
+      }
+    },
+    "/service-requests/{id}": {
+      "patch": {
+        "tags": ["Service Requests"],
+        "summary": "Update Request Status & Engineer Remarks (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string", "enum": ["pending", "in_progress", "completed", "cancelled"] },
+                  "engineerRemarks": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Request updated successfully" }
+        }
+      },
+      "delete": {
+        "tags": ["Service Requests"],
+        "summary": "Soft Delete Request (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Ticket deleted successfully" }
+        }
+      }
+    },
+    "/blogs": {
+      "get": {
+        "tags": ["Blogs"],
+        "summary": "Get Published Blogs",
+        "security": [],
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "List of published blogs" }
+        }
+      },
+      "post": {
+        "tags": ["Blogs"],
+        "summary": "Add Blog (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "description", "featuredImage"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string", "description": "Rich HTML content" },
+                  "tags": { "type": "string", "description": "JSON stringified array" },
+                  "seo": { "type": "string", "description": "JSON stringified object: {title, description, keywords}" },
+                  "publishedDate": { "type": "string", "format": "date" },
+                  "status": { "type": "string", "enum": ["draft", "published"], "default": "draft" },
+                  "featuredImage": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Blog post created successfully" }
+        }
+      }
+    },
+    "/blogs/admin/all": {
+      "get": {
+        "tags": ["Blogs"],
+        "summary": "Get All Blogs (Admin - drafts & published)",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "All blog items list" }
+        }
+      }
+    },
+    "/blogs/{slug}": {
+      "get": {
+        "tags": ["Blogs"],
+        "summary": "Get Blog details by Slug",
+        "security": [],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Blog details returned" },
+          "404": { "description": "Blog not found" }
+        }
+      }
+    },
+    "/blogs/{id}": {
+      "put": {
+        "tags": ["Blogs"],
+        "summary": "Edit Blog Details (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "tags": { "type": "string" },
+                  "seo": { "type": "string" },
+                  "publishedDate": { "type": "string" },
+                  "status": { "type": "string", "enum": ["draft", "published"] },
+                  "featuredImage": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Blog updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Blogs"],
+        "summary": "Soft Delete Blog (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Blog deleted successfully" }
+        }
+      }
+    },
+    "/testimonials": {
+      "get": {
+        "tags": ["Testimonials"],
+        "summary": "List Testimonials",
+        "security": [],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["active", "inactive"] } }
+        ],
+        "responses": {
+          "200": { "description": "Testimonial review list" }
+        }
+      },
+      "post": {
+        "tags": ["Testimonials"],
+        "summary": "Add Testimonial (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["customerName", "company", "rating", "review", "photo"],
+                "properties": {
+                  "customerName": { "type": "string" },
+                  "company": { "type": "string" },
+                  "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+                  "review": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"], "default": "active" },
+                  "photo": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Testimonial created" }
+        }
+      }
+    },
+    "/testimonials/{id}": {
+      "put": {
+        "tags": ["Testimonials"],
+        "summary": "Edit Testimonial Details (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "customerName": { "type": "string" },
+                  "company": { "type": "string" },
+                  "rating": { "type": "integer" },
+                  "review": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"] },
+                  "photo": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Testimonial updated" }
+        }
+      },
+      "delete": {
+        "tags": ["Testimonials"],
+        "summary": "Soft Delete Testimonial (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Testimonial deleted successfully" }
+        }
+      }
+    },
+    "/cms": {
+      "get": {
+        "tags": ["CMS"],
+        "summary": "Get Homepage Configuration Settings",
+        "security": [],
+        "responses": {
+          "200": { "description": "CMS data" }
+        }
+      },
+      "put": {
+        "tags": ["CMS"],
+        "summary": "Update Text and Section titles (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "whyChooseUs": { "type": "array", "items": { "type": "object" } },
+                  "featuredProducts": { "type": "array", "items": { "type": "string" } },
+                  "brandSectionTitle": { "type": "string" },
+                  "servicesSectionTitle": { "type": "string" },
+                  "testimonialsSectionTitle": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "CMS text configs updated" }
+        }
+      }
+    },
+    "/cms/hero-slider": {
+      "post": {
+        "tags": ["CMS"],
+        "summary": "Add Hero Slide (Admin)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "image"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "subtitle": { "type": "string" },
+                  "link": { "type": "string" },
+                  "order": { "type": "integer" },
+                  "image": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Slide successfully uploaded" }
+        }
+      }
+    },
+    "/cms/hero-slider/{slideId}": {
+      "delete": {
+        "tags": ["CMS"],
+        "summary": "Remove Hero Slide (Admin)",
+        "parameters": [
+          { "name": "slideId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Slide asset and item deleted" }
+        }
+      }
+    },
+    "/contact": {
+      "post": {
+        "tags": ["Contact"],
+        "summary": "Submit Contact Form Inquiry (Client)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "mobile", "email", "subject", "message"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "mobile": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "subject": { "type": "string" },
+                  "message": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Inquiry submitted" }
+        }
+      },
+      "get": {
+        "tags": ["Contact"],
+        "summary": "View Inquiries (Admin)",
+        "parameters": [
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "isRead", "in": "query", "schema": { "type": "boolean" } }
+        ],
+        "responses": {
+          "200": { "description": "Inquiries list returned" }
+        }
+      }
+    },
+    "/contact/{id}/read": {
+      "patch": {
+        "tags": ["Contact"],
+        "summary": "Mark Inquiry as Read (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Status updated successfully" }
+        }
+      }
+    },
+    "/contact/{id}": {
+      "delete": {
+        "tags": ["Contact"],
+        "summary": "Delete Inquiry (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Inquiry record deleted" }
+        }
+      }
+    }
+  }
+}
