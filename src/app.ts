@@ -33,9 +33,20 @@ app.use(
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   })
 );
+const allowedOrigins = config.CORS_ORIGIN
+  ? config.CORS_ORIGIN.split(',').map((o) => o.trim())
+  : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'];
+
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
   })
 );

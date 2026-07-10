@@ -28,6 +28,7 @@ const envSchema = z.object({
   EMAIL_USER: z.string().optional().default(''),
   EMAIL_PASS: z.string().optional().default(''),
   EMAIL_FROM: z.string().optional().default('"PC INFOTECH Support" <no-reply@pcinfotech.com>'),
+  CORS_ORIGIN: z.string().optional().default(''),
 });
 
 const parsed = envSchema.safeParse(process.env);
