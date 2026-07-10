@@ -40,16 +40,8 @@ const allowedOrigins = config.CORS_ORIGIN
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      
-      // Allow any localhost or 127.0.0.1 port (e.g. http://localhost:3000, http://localhost:5173)
-      const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
-      
-      if (isLocalhost || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
-        callback(null, true);
-      } else {
-        callback(null, false);
-      }
+      // Allow all origins to remove cross-origin restrictions for now
+      callback(null, true);
     },
     credentials: true,
   })
