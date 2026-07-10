@@ -21,4 +21,5 @@ export interface ICms extends Document {
   brandSectionTitle: string;
   servicesSectionTitle: string;
   testimonialsSectionTitle: string;
+  whatsappNumber: string;
 }

@@ -15,7 +15,14 @@ export class CmsService {
     let cms = await Cms.findOne();
     if (!cms) cms = await Cms.create({});
 
-    const fields = ['whyChooseUs', 'featuredProducts', 'brandSectionTitle', 'servicesSectionTitle', 'testimonialsSectionTitle'];
+    const fields = [
+      'whyChooseUs',
+      'featuredProducts',
+      'brandSectionTitle',
+      'servicesSectionTitle',
+      'testimonialsSectionTitle',
+      'whatsappNumber'
+    ];
     fields.forEach((f) => { if (body[f] !== undefined) (cms as any)[f] = body[f]; });
 
     await cms.save();

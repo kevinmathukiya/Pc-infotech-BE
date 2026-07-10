@@ -1,5 +1,6 @@
 import { Schema, model } from 'mongoose';
 import { ICms } from './cms.interface';
+import { config } from '../../config/index';
 
 const cmsSchema = new Schema<ICms>(
   {
@@ -26,6 +27,7 @@ const cmsSchema = new Schema<ICms>(
     brandSectionTitle: { type: String, default: 'Our Brand Partners' },
     servicesSectionTitle: { type: String, default: 'Services We Offer' },
     testimonialsSectionTitle: { type: String, default: 'What Our Clients Say' },
+    whatsappNumber: { type: String, default: () => config.WHATSAPP_NUMBER },
   },
   { timestamps: true }
 );
