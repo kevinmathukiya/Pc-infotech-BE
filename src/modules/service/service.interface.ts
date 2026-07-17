@@ -13,7 +13,7 @@ export interface IAsset {
 export interface IService extends Document {
   name: string;
   slug: string;
-  brand?: Types.ObjectId;
+  brand?: 'HP' | 'Canon';
   serviceCategory: string;
   shortDescription: string;
   fullDescription: string;

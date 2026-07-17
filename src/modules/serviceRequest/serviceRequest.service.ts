@@ -17,7 +17,10 @@ export class ServiceRequestService {
       .filter().search(['customerName', 'mobileNumber', 'email', 'brand'])
       .sort().limitFields().paginate();
     const requests = await features.query;
-    const total = await ServiceRequest.countDocuments({ isDeleted: false });
+    const total = await ServiceRequest.countDocuments({
+      ...features.getFilter(),
+      isDeleted: false,
+    });
     return { requests, total };
   }
 

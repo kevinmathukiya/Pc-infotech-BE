@@ -2,20 +2,11 @@ import { Category } from './category.model';
 import { ApiFeatures } from '../../utils/apiFeatures';
 import { AppError } from '../../utils/appError';
 import { HttpStatus } from '../../constants/httpStatusCodes';
-import { Brand } from '../brand/brand.model';
-
-const slugify = (text: string) =>
-  text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-');
+import { slugify } from '../../utils/slugify';
 
 export class CategoryService {
   static async getAllCategories(queryObj: any) {
-    const features = new ApiFeatures(Category.find().populate('brand'), queryObj)
+    const features = new ApiFeatures(Category.find(), queryObj)
       .filter()
       .search(['name', 'description'])
       .sort()
@@ -24,7 +15,7 @@ export class CategoryService {
 
     const categories = await features.query;
     const total = await Category.countDocuments({
-      ...features.filter().query.getFilter(),
+      ...features.getFilter(),
       isDeleted: false,
     });
 
@@ -32,16 +23,11 @@ export class CategoryService {
   }
 
   static async createCategory(body: {
-    brand: string;
+    brand: 'HP' | 'Canon';
     name: string;
     description?: string;
     status?: 'active' | 'inactive';
   }) {
-    const brand = await Brand.findOne({ _id: body.brand, isDeleted: false });
-    if (!brand) {
-      throw new AppError('Associated Brand not found', HttpStatus.NOT_FOUND);
-    }
-
     const slug = slugify(body.name);
     const existing = await Category.findOne({ slug });
     if (existing) {
@@ -58,7 +44,7 @@ export class CategoryService {
 
   static async updateCategory(
     id: string,
-    body: { brand?: string; name?: string; description?: string; status?: 'active' | 'inactive' }
+    body: { brand?: 'HP' | 'Canon'; name?: string; description?: string; status?: 'active' | 'inactive' }
   ) {
     const category = await Category.findById(id);
     if (!category || category.isDeleted) {
@@ -66,11 +52,7 @@ export class CategoryService {
     }
 
     if (body.brand) {
-      const brand = await Brand.findOne({ _id: body.brand, isDeleted: false });
-      if (!brand) {
-        throw new AppError('Associated Brand not found', HttpStatus.NOT_FOUND);
-      }
-      category.brand = brand._id as any;
+      category.brand = body.brand;
     }
 
     if (body.name && body.name !== category.name) {

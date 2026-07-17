@@ -1,35 +1,21 @@
 import { Types } from 'mongoose';
 import { SparePart } from './sparePart.model';
-import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
 import { Product } from '../product/product.model';
 import { ApiFeatures } from '../../utils/apiFeatures';
 import { AppError } from '../../utils/appError';
 import { HttpStatus } from '../../constants/httpStatusCodes';
 import { uploadToCloudinary, deleteFromCloudinary } from '../../helpers/cloudinary';
-
-const slugify = (text: string) =>
-  text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-');
+import { slugify } from '../../utils/slugify';
 
 export class SparePartService {
   static async createSparePart(
     body: any,
     files: {
-      thumbnail: Buffer;
       images: Buffer[];
     },
     adminId: string
   ) {
-    // Validate referenced Brand
-    const brand = await Brand.findOne({ _id: body.brand, isDeleted: false });
-    if (!brand) throw new AppError('Brand not found', HttpStatus.NOT_FOUND);
-
     // Validate referenced Category
     const category = await Category.findOne({ _id: body.category, isDeleted: false });
     if (!category) throw new AppError('Category not found', HttpStatus.NOT_FOUND);
@@ -58,9 +44,6 @@ export class SparePartService {
       throw new AppError('Spare part with this name already exists.', HttpStatus.CONFLICT);
     }
 
-    // Upload thumbnail
-    const thumbnailResult = await uploadToCloudinary(files.thumbnail, 'spare-parts/thumbnails');
-
     // Upload gallery images
     const imagesResults = [];
     for (const imageBuffer of files.images) {
@@ -71,7 +54,6 @@ export class SparePartService {
     const sparePart = await SparePart.create({
       ...body,
       slug,
-      thumbnail: thumbnailResult,
       images: imagesResults,
       createdBy: adminId,
     });
@@ -83,7 +65,7 @@ export class SparePartService {
     const searchFields = ['name', 'sku', 'compatibleModels', 'modelNumber'];
 
     const features = new ApiFeatures(
-      SparePart.find().populate('brand').populate('category').populate('product'),
+      SparePart.find().populate('category').populate('product'),
       queryObj
     )
       .filter()
@@ -94,7 +76,7 @@ export class SparePartService {
 
     const spareParts = await features.query;
     const total = await SparePart.countDocuments({
-      ...features.filter().query.getFilter(),
+      ...features.getFilter(),
       isDeleted: false,
     });
 
@@ -107,7 +89,6 @@ export class SparePartService {
       : { slug: idOrSlug, isDeleted: false };
 
     const sparePart = await SparePart.findOne(query)
-      .populate('brand')
       .populate('category')
       .populate('product');
 
@@ -122,7 +103,6 @@ export class SparePartService {
     idOrSlug: string,
     body: any,
     files?: {
-      thumbnail?: Buffer;
       images?: Buffer[];
     }
   ) {
@@ -137,9 +117,7 @@ export class SparePartService {
 
     // Validate referenced Brand if updated
     if (body.brand) {
-      const brand = await Brand.findOne({ _id: body.brand, isDeleted: false });
-      if (!brand) throw new AppError('Brand not found', HttpStatus.NOT_FOUND);
-      sparePart.brand = brand._id as any;
+      sparePart.brand = body.brand;
     }
 
     // Validate referenced Category if updated
@@ -205,12 +183,6 @@ export class SparePartService {
       }
     });
 
-    // Upload new thumbnail if provided
-    if (files?.thumbnail) {
-      await deleteFromCloudinary(sparePart.thumbnail.publicId);
-      sparePart.thumbnail = await uploadToCloudinary(files.thumbnail, 'spare-parts/thumbnails');
-    }
-
     // Upload new gallery images if provided
     if (files?.images && files.images.length > 0) {
       for (const img of sparePart.images) {
@@ -228,7 +200,6 @@ export class SparePartService {
 
     // Return populated spare part
     return await SparePart.findById(sparePart._id)
-      .populate('brand')
       .populate('category')
       .populate('product');
   }
@@ -252,7 +223,6 @@ export class SparePartService {
     if (!product) throw new AppError('Product not found', HttpStatus.NOT_FOUND);
 
     const spareParts = await SparePart.find({ product: productId, isDeleted: false })
-      .populate('brand')
       .populate('category')
       .populate('product');
 
@@ -285,7 +255,7 @@ export class SparePartService {
     delete queryObjCopy.search; // Remove default search field to prevent ApiFeatures.search collision
 
     const features = new ApiFeatures(
-      SparePart.find({ $or: searchConditions } as any).populate('brand').populate('category').populate('product'),
+      SparePart.find({ $or: searchConditions } as any).populate('category').populate('product'),
       queryObjCopy
     )
       .filter()

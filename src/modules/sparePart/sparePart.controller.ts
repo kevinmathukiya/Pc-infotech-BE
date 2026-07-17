@@ -34,12 +34,8 @@ export class SparePartController {
       }
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const thumbnailFile = files?.['thumbnail']?.[0];
       const imageFiles = files?.['images'] ?? [];
 
-      if (!thumbnailFile) {
-        throw new AppError('Thumbnail image is required.', HttpStatus.BAD_REQUEST);
-      }
       if (imageFiles.length === 0) {
         throw new AppError('At least one spare part image is required.', HttpStatus.BAD_REQUEST);
       }
@@ -47,7 +43,6 @@ export class SparePartController {
       const sparePart = await SparePartService.createSparePart(
         req.body,
         {
-          thumbnail: thumbnailFile.buffer,
           images: imageFiles.map((f) => f.buffer),
         },
         adminId
@@ -68,11 +63,9 @@ export class SparePartController {
     try {
       const idOrSlug = getParam(req.params.id || req.params.slug);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const thumbnailFile = files?.['thumbnail']?.[0];
       const imageFiles = files?.['images'] ?? [];
 
       const sparePart = await SparePartService.updateSparePart(idOrSlug, req.body, {
-        thumbnail: thumbnailFile?.buffer,
         images: imageFiles.length > 0 ? imageFiles.map((f) => f.buffer) : undefined,
       });
 

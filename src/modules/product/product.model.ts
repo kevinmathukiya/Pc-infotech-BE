@@ -5,7 +5,7 @@ const productSchema = new Schema<IProduct>(
   {
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, index: true },
-    brand: { type: Schema.Types.ObjectId, ref: 'Brand', required: true, index: true },
+    brand: { type: String, enum: ['HP', 'Canon'], required: true, index: true },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
     modelNumber: { type: String, required: true, trim: true },
     sku: { type: String, required: true, unique: true, index: true },
@@ -28,14 +28,6 @@ const productSchema = new Schema<IProduct>(
         publicId: { type: String, required: true },
       },
     ],
-    thumbnail: {
-      url: { type: String, required: true },
-      publicId: { type: String, required: true },
-    },
-    brochure: {
-      url: { type: String },
-      publicId: { type: String },
-    },
     status: { type: String, enum: ['active', 'inactive'], default: 'active', index: true },
     isFeatured: { type: Boolean, default: false, index: true },
     isNewArrival: { type: Boolean, default: false, index: true },
@@ -47,8 +39,14 @@ const productSchema = new Schema<IProduct>(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
+
+productSchema.virtual('thumbnail').get(function (this: any) {
+  return this.images && this.images.length > 0 ? this.images[0] : undefined;
+});
 
 productSchema.index({
   name: 'text',

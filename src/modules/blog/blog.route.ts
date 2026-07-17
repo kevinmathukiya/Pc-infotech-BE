@@ -7,12 +7,12 @@ import { createBlogSchema, updateBlogSchema } from './blog.validation';
 
 const router = Router();
 
+// Admin
+router.get('/admin/all', authenticateAdmin, BlogController.getAllBlogsAdmin);
+
 // Public
 router.get('/', BlogController.getAllBlogs);
 router.get('/:slug', BlogController.getBlogBySlug);
-
-// Admin
-router.get('/admin/all', authenticateAdmin, BlogController.getAllBlogsAdmin);
 router.post(
   '/',
   authenticateAdmin,

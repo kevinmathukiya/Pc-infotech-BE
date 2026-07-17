@@ -38,7 +38,8 @@ export class AuthController {
 
       const admin = await Admin.findOne({ email: email.toLowerCase() }).select('+password');
       if (!admin || !(await admin.comparePassword(password))) {
-        throw new AppError('Invalid email or password.', HttpStatus.UNAUTHORIZED);
+        // Return 401 Unauthorized instead of throwing to let error handler format response
+        return ApiResponse.error(res, 'Invalid email or password.', null, HttpStatus.UNAUTHORIZED);
       }
 
       const accessToken = AuthService.generateAccessToken(admin._id.toString());

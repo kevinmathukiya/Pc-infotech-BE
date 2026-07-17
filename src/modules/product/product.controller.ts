@@ -32,16 +32,11 @@ export class ProductController {
   static async createProduct(req: Request, res: Response, next: NextFunction) {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const thumbnailFile = files?.['thumbnail']?.[0];
       const imageFiles = files?.['images'] ?? [];
-      const brochureFile = files?.['brochure']?.[0];
-      if (!thumbnailFile) throw new AppError('Thumbnail image is required.', HttpStatus.BAD_REQUEST);
       if (imageFiles.length === 0) throw new AppError('At least one product image is required.', HttpStatus.BAD_REQUEST);
 
       const product = await ProductService.createProduct(req.body, {
-        thumbnail: thumbnailFile.buffer,
         images: imageFiles.map((f) => f.buffer),
-        brochure: brochureFile?.buffer,
       });
       return ApiResponse.success(res, 'Product created successfully', { product }, HttpStatus.CREATED);
     } catch (error) { next(error); }
@@ -51,13 +46,9 @@ export class ProductController {
     try {
       const id = getParam(req.params.id);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const thumbnailFile = files?.['thumbnail']?.[0];
       const imageFiles = files?.['images'] ?? [];
-      const brochureFile = files?.['brochure']?.[0];
       const product = await ProductService.updateProduct(id, req.body, {
-        thumbnail: thumbnailFile?.buffer,
         images: imageFiles.length > 0 ? imageFiles.map((f) => f.buffer) : undefined,
-        brochure: brochureFile?.buffer,
       });
       return ApiResponse.success(res, 'Product updated successfully', { product });
     } catch (error) { next(error); }

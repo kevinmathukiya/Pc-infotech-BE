@@ -3,10 +3,7 @@ import { ApiFeatures } from '../../utils/apiFeatures';
 import { AppError } from '../../utils/appError';
 import { HttpStatus } from '../../constants/httpStatusCodes';
 import { uploadToCloudinary, deleteFromCloudinary } from '../../helpers/cloudinary';
-
-const slugify = (text: string) =>
-  text.toString().toLowerCase().trim()
-    .replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+import { slugify } from '../../utils/slugify';
 
 export class BlogService {
   static async getAllBlogs(queryObj: any, adminView = false) {
@@ -16,7 +13,10 @@ export class BlogService {
     const features = new ApiFeatures(Blog.find(baseFilter), queryObj)
       .search(['title', 'tags']).sort().limitFields().paginate();
     const blogs = await features.query;
-    const total = await Blog.countDocuments(baseFilter);
+    const total = await Blog.countDocuments({
+      ...features.getFilter(),
+      ...baseFilter,
+    });
     return { blogs, total };
   }
 

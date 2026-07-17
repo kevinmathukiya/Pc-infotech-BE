@@ -3,24 +3,24 @@ import { ApiFeatures } from '../../utils/apiFeatures';
 import { AppError } from '../../utils/appError';
 import { HttpStatus } from '../../constants/httpStatusCodes';
 import { uploadToCloudinary, deleteFromCloudinary } from '../../helpers/cloudinary';
-
-const slugify = (text: string) =>
-  text.toString().toLowerCase().trim()
-    .replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-');
+import { slugify } from '../../utils/slugify';
 
 export class ServiceService {
   static async getAllServices(queryObj: any) {
-    const features = new ApiFeatures(Service.find().populate('brand'), queryObj)
+    const features = new ApiFeatures(Service.find(), queryObj)
       .filter().search(['name', 'serviceCategory', 'shortDescription'])
       .sort().limitFields().paginate();
 
     const services = await features.query;
-    const total = await Service.countDocuments({ isDeleted: false });
+    const total = await Service.countDocuments({
+      ...features.getFilter(),
+      isDeleted: false,
+    });
     return { services, total };
   }
 
   static async getServiceBySlug(slug: string) {
-    const service = await Service.findOne({ slug, isDeleted: false }).populate('brand');
+    const service = await Service.findOne({ slug, isDeleted: false });
     if (!service) throw new AppError('Service not found', HttpStatus.NOT_FOUND);
     return service;
   }

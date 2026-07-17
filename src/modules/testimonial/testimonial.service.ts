@@ -9,7 +9,10 @@ export class TestimonialService {
     const features = new ApiFeatures(Testimonial.find(), queryObj)
       .filter().sort().limitFields().paginate();
     const testimonials = await features.query;
-    const total = await Testimonial.countDocuments({ isDeleted: false });
+    const total = await Testimonial.countDocuments({
+      ...features.getFilter(),
+      isDeleted: false,
+    });
     return { testimonials, total };
   }
 
@@ -23,7 +26,19 @@ export class TestimonialService {
     const testimonial = await Testimonial.findById(id);
     if (!testimonial || testimonial.isDeleted) throw new AppError('Testimonial not found', HttpStatus.NOT_FOUND);
 
-    Object.assign(testimonial, body);
+    const allowedFields = [
+      'customerName',
+      'company',
+      'rating',
+      'review',
+      'status',
+    ];
+
+    allowedFields.forEach((field) => {
+      if (body[field] !== undefined) {
+        (testimonial as any)[field] = body[field];
+      }
+    });
 
     if (photoBuffer) {
       await deleteFromCloudinary(testimonial.photo.publicId);

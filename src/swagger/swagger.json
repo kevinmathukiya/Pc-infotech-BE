@@ -83,7 +83,6 @@
   ],
   "tags": [
     { "name": "Auth", "description": "Admin authentication and password operations" },
-    { "name": "Brands", "description": "Brand CRUD and listing operations" },
     { "name": "Categories", "description": "Product category configuration" },
     { "name": "Products", "description": "Product inventory and catalog operations" },
     { "name": "Services", "description": "Repair and maintenance services" },
@@ -93,7 +92,8 @@
     { "name": "Testimonials", "description": "Customer feedback testimonials" },
     { "name": "CMS", "description": "Homepage layout slider and text content builder" },
     { "name": "Contact", "description": "Contact form inquiry operations" },
-    { "name": "Spare Parts", "description": "Spare parts inventory and catalog operations" }
+    { "name": "Spare Parts", "description": "Spare parts inventory and catalog operations" },
+    { "name": "Feedbacks", "description": "Customer feedback submission and management" }
   ],
   "paths": {
     "/auth/login": {
@@ -305,101 +305,6 @@
         }
       }
     },
-    "/brands": {
-      "get": {
-        "tags": ["Brands"],
-        "summary": "Get All Brands",
-        "security": [],
-        "parameters": [
-          { "name": "search", "in": "query", "schema": { "type": "string" } },
-          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["active", "inactive"] } },
-          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
-          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
-        ],
-        "responses": {
-          "200": { "description": "List of brands" }
-        }
-      },
-      "post": {
-        "tags": ["Brands"],
-        "summary": "Add Brand (Admin)",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "required": ["name", "description", "logo", "banner"],
-                "properties": {
-                  "name": { "type": "string", "example": "HP" },
-                  "description": { "type": "string" },
-                  "status": { "type": "string", "enum": ["active", "inactive"], "default": "active" },
-                  "logo": { "type": "string", "format": "binary" },
-                  "banner": { "type": "string", "format": "binary" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Brand created successfully" }
-        }
-      }
-    },
-    "/brands/{slug}": {
-      "get": {
-        "tags": ["Brands"],
-        "summary": "Get Brand Details by Slug",
-        "security": [],
-        "parameters": [
-          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Brand details returned" },
-          "404": { "description": "Brand not found" }
-        }
-      }
-    },
-    "/brands/{id}": {
-      "put": {
-        "tags": ["Brands"],
-        "summary": "Update Brand details (Admin)",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": { "type": "string" },
-                  "description": { "type": "string" },
-                  "status": { "type": "string", "enum": ["active", "inactive"] },
-                  "logo": { "type": "string", "format": "binary" },
-                  "banner": { "type": "string", "format": "binary" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Brand updated successfully" },
-          "404": { "description": "Brand not found" }
-        }
-      },
-      "delete": {
-        "tags": ["Brands"],
-        "summary": "Soft Delete Brand (Admin)",
-        "parameters": [
-          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Brand soft-deleted successfully" },
-          "404": { "description": "Brand not found" }
-        }
-      }
-    },
     "/categories": {
       "get": {
         "tags": ["Categories"],
@@ -511,7 +416,7 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["brand", "category", "name", "modelNumber", "sku", "shortDescription", "fullDescription", "warranty", "price", "stockQuantity", "thumbnail", "images"],
+                "required": ["brand", "category", "name", "modelNumber", "sku", "shortDescription", "fullDescription", "warranty", "price", "stockQuantity", "images"],
                 "properties": {
                   "brand": { "type": "string" },
                   "category": { "type": "string" },
@@ -532,9 +437,7 @@
                   "isBestSeller": { "type": "boolean", "default": false },
                   "metaTitle": { "type": "string" },
                   "metaDescription": { "type": "string" },
-                  "thumbnail": { "type": "string", "format": "binary", "description": "Thumbnail display image" },
-                  "images": { "type": "array", "items": { "type": "string", "format": "binary" }, "description": "Main gallery images (up to 10)" },
-                  "brochure": { "type": "string", "format": "binary", "description": "Product PDF brochure file" }
+                  "images": { "type": "array", "items": { "type": "string", "format": "binary" }, "description": "Main gallery images (up to 10)" }
                 }
               }
             }
@@ -591,9 +494,7 @@
                   "isBestSeller": { "type": "boolean" },
                   "metaTitle": { "type": "string" },
                   "metaDescription": { "type": "string" },
-                  "thumbnail": { "type": "string", "format": "binary" },
-                  "images": { "type": "array", "items": { "type": "string", "format": "binary" } },
-                  "brochure": { "type": "string", "format": "binary" }
+                  "images": { "type": "array", "items": { "type": "string", "format": "binary" } }
                 }
               }
             }
@@ -1313,7 +1214,7 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
-                "required": ["brand", "category", "product", "name", "sku", "shortDescription", "fullDescription", "warranty", "price", "stock", "thumbnail", "images"],
+                "required": ["brand", "category", "product", "name", "sku", "shortDescription", "fullDescription", "warranty", "price", "stock", "images"],
                 "properties": {
                   "brand": { "type": "string" },
                   "category": { "type": "string" },
@@ -1333,7 +1234,6 @@
                   "stockQuantity": { "type": "integer", "default": 0 },
                   "status": { "type": "string", "enum": ["active", "inactive"], "default": "active" },
                   "featured": { "type": "boolean", "default": false },
-                  "thumbnail": { "type": "string", "format": "binary" },
                   "images": { "type": "array", "items": { "type": "string", "format": "binary" } }
                 }
               }
@@ -1388,7 +1288,6 @@
                   "stockQuantity": { "type": "integer" },
                   "status": { "type": "string", "enum": ["active", "inactive"] },
                   "featured": { "type": "boolean" },
-                  "thumbnail": { "type": "string", "format": "binary" },
                   "images": { "type": "array", "items": { "type": "string", "format": "binary" } }
                 }
               }
@@ -1429,7 +1328,6 @@
                   "stockQuantity": { "type": "integer" },
                   "status": { "type": "string", "enum": ["active", "inactive"] },
                   "featured": { "type": "boolean" },
-                  "thumbnail": { "type": "string", "format": "binary" },
                   "images": { "type": "array", "items": { "type": "string", "format": "binary" } }
                 }
               }
@@ -1477,6 +1375,97 @@
         ],
         "responses": {
           "200": { "description": "List of spare parts belonging to the specified product returned" }
+        }
+      }
+    },
+    "/feedbacks": {
+      "post": {
+        "tags": ["Feedbacks"],
+        "summary": "Submit Feedback (Client/Visitor)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["customerName", "rating", "comment"],
+                "properties": {
+                  "customerName": { "type": "string", "example": "John Doe" },
+                  "email": { "type": "string", "format": "email", "example": "john@example.com" },
+                  "rating": { "type": "integer", "minimum": 1, "maximum": 5, "example": 5 },
+                  "comment": { "type": "string", "example": "Excellent customer support and fast repair." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Feedback submitted successfully (pending approval)" }
+        }
+      },
+      "get": {
+        "tags": ["Feedbacks"],
+        "summary": "Get Approved Feedbacks",
+        "security": [],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "List of approved feedbacks" }
+        }
+      }
+    },
+    "/feedbacks/admin": {
+      "get": {
+        "tags": ["Feedbacks"],
+        "summary": "Get All Feedbacks (Admin)",
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["pending", "approved", "rejected"] } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10 } }
+        ],
+        "responses": {
+          "200": { "description": "List of all feedbacks" }
+        }
+      }
+    },
+    "/feedbacks/{id}/status": {
+      "patch": {
+        "tags": ["Feedbacks"],
+        "summary": "Update Feedback Status (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": { "type": "string", "enum": ["pending", "approved", "rejected"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Feedback status updated successfully" }
+        }
+      }
+    },
+    "/feedbacks/{id}": {
+      "delete": {
+        "tags": ["Feedbacks"],
+        "summary": "Soft Delete Feedback (Admin)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Feedback soft-deleted successfully" }
         }
       }
     }

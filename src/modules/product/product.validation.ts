@@ -15,7 +15,7 @@ const stringToJSON = (schema: z.ZodTypeAny) =>
 export const createProductSchema = z.object({
   body: z.object({
     name: z.string().min(1, 'Product name is required'),
-    brand: z.string().min(1, 'Brand ID is required'),
+    brand: z.enum(['HP', 'Canon']),
     category: z.string().min(1, 'Category ID is required'),
     modelNumber: z.string().min(1, 'Model number is required'),
     sku: z.string().min(1, 'SKU is required'),
@@ -53,7 +53,7 @@ export const updateProductSchema = z.object({
   }),
   body: z.object({
     name: z.string().optional(),
-    brand: z.string().optional(),
+    brand: z.enum(['HP', 'Canon']).optional(),
     category: z.string().optional(),
     modelNumber: z.string().optional(),
     sku: z.string().optional(),

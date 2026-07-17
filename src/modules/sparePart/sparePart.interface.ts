@@ -5,7 +5,7 @@ export interface ISparePart extends Document {
   name: string;
   slug: string;
   sku: string;
-  brand: Types.ObjectId;
+  brand: 'HP' | 'Canon';
   category: Types.ObjectId;
   product: Types.ObjectId;
   description?: string;
@@ -19,7 +19,7 @@ export interface ISparePart extends Document {
   stock: number;
   stockQuantity: number; // Linked directly to stock to preserve admin dashboard compatibility
   warranty: string;
-  thumbnail: IAsset;
+  thumbnail?: IAsset;
   images: IAsset[];
   featured: boolean;
   status: 'active' | 'inactive';

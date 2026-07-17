@@ -17,9 +17,7 @@ router.post(
   '/',
   authenticateAdmin,
   upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
     { name: 'images', maxCount: 10 },
-    { name: 'brochure', maxCount: 1 },
   ]),
   validate(createProductSchema),
   ProductController.createProduct
@@ -29,9 +27,7 @@ router.put(
   '/:id',
   authenticateAdmin,
   upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
     { name: 'images', maxCount: 10 },
-    { name: 'brochure', maxCount: 1 },
   ]),
   validate(updateProductSchema),
   ProductController.updateProduct

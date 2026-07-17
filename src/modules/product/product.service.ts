@@ -4,17 +4,8 @@ import { ApiFeatures } from '../../utils/apiFeatures';
 import { AppError } from '../../utils/appError';
 import { HttpStatus } from '../../constants/httpStatusCodes';
 import { uploadToCloudinary, deleteFromCloudinary } from '../../helpers/cloudinary';
-import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
-
-const slugify = (text: string) =>
-  text
-    .toString()
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^\w\-]+/g, '')
-    .replace(/\-\-+/g, '-');
+import { slugify } from '../../utils/slugify';
 
 export class ProductService {
   static async getAllProducts(queryObj: any) {
@@ -43,7 +34,7 @@ export class ProductService {
     }
 
     const features = new ApiFeatures(
-      Product.find().populate('brand').populate('category'),
+      Product.find().populate('category'),
       queryObj
     )
       .filter()
@@ -54,7 +45,7 @@ export class ProductService {
 
     const products = await features.query;
     const total = await Product.countDocuments({
-      ...features.filter().query.getFilter(),
+      ...features.getFilter(),
       isDeleted: false,
     });
 
@@ -63,7 +54,6 @@ export class ProductService {
 
   static async getProductBySlug(slug: string) {
     let product = await Product.findOne({ slug, isDeleted: false })
-      .populate('brand')
       .populate('category');
 
     // Intercept query for spare parts to maintain backward compatibility
@@ -93,14 +83,9 @@ export class ProductService {
   static async createProduct(
     body: any,
     files: {
-      thumbnail: Buffer;
       images: Buffer[];
-      brochure?: Buffer;
     }
   ) {
-    const brand = await Brand.findOne({ _id: body.brand, isDeleted: false });
-    if (!brand) throw new AppError('Brand not found', HttpStatus.NOT_FOUND);
-
     const category = await Category.findOne({ _id: body.category, isDeleted: false });
     if (!category) throw new AppError('Category not found', HttpStatus.NOT_FOUND);
 
@@ -110,25 +95,16 @@ export class ProductService {
       throw new AppError('Product with this name already exists.', HttpStatus.CONFLICT);
     }
 
-    const thumbnailResult = await uploadToCloudinary(files.thumbnail, 'products/thumbnails');
-
     const imagesResults = [];
     for (const imageBuffer of files.images) {
       const res = await uploadToCloudinary(imageBuffer, 'products/images');
       imagesResults.push(res);
     }
 
-    let brochureResult;
-    if (files.brochure) {
-      brochureResult = await uploadToCloudinary(files.brochure, 'products/brochures', 'raw');
-    }
-
     const product = await Product.create({
       ...body,
       slug,
-      thumbnail: thumbnailResult,
       images: imagesResults,
-      brochure: brochureResult,
     });
 
     return product;
@@ -138,9 +114,7 @@ export class ProductService {
     id: string,
     body: any,
     files?: {
-      thumbnail?: Buffer;
       images?: Buffer[];
-      brochure?: Buffer;
     }
   ) {
     const product = await Product.findById(id);
@@ -149,9 +123,7 @@ export class ProductService {
     }
 
     if (body.brand) {
-      const brand = await Brand.findOne({ _id: body.brand, isDeleted: false });
-      if (!brand) throw new AppError('Brand not found', HttpStatus.NOT_FOUND);
-      product.brand = brand._id as any;
+      product.brand = body.brand;
     }
 
     if (body.category) {
@@ -195,11 +167,6 @@ export class ProductService {
       }
     });
 
-    if (files?.thumbnail) {
-      await deleteFromCloudinary(product.thumbnail.publicId);
-      product.thumbnail = await uploadToCloudinary(files.thumbnail, 'products/thumbnails');
-    }
-
     if (files?.images && files.images.length > 0) {
       for (const img of product.images) {
         await deleteFromCloudinary(img.publicId);
@@ -210,13 +177,6 @@ export class ProductService {
         newImages.push(res);
       }
       product.images = newImages;
-    }
-
-    if (files?.brochure) {
-      if (product.brochure?.publicId) {
-        await deleteFromCloudinary(product.brochure.publicId, 'raw');
-      }
-      product.brochure = await uploadToCloudinary(files.brochure, 'products/brochures', 'raw');
     }
 
     await product.save();

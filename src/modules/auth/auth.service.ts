@@ -79,7 +79,7 @@ export class AuthService {
     }
   }
 
-  static async forgotPassword(email: string): Promise<string> {
+  static async forgotPassword(email: string): Promise<void> {
     let account: any = await Admin.findOne({ email: email.toLowerCase() });
     let accountType: 'admin' | 'user' = 'admin';
 
@@ -116,8 +116,6 @@ export class AuthService {
       </div>
     `;
     await sendEmail(account.email, emailSubject, emailHtml);
-
-    return otp;
   }
 
   static async verifyOtp(email: string, otp: string): Promise<string> {

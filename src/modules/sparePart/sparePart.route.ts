@@ -17,7 +17,6 @@ router.post(
   '/',
   authenticateAdmin,
   upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
     { name: 'images', maxCount: 10 },
   ]),
   validate(createSparePartSchema),
@@ -29,7 +28,6 @@ router.put(
   '/:id',
   authenticateAdmin,
   upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
     { name: 'images', maxCount: 10 },
   ]),
   validate(updateSparePartSchema),
@@ -40,7 +38,6 @@ router.patch(
   '/:id',
   authenticateAdmin,
   upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
     { name: 'images', maxCount: 10 },
   ]),
   validate(updateSparePartSchema),

@@ -4,15 +4,16 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import fs from 'fs';
+import mongoose from 'mongoose';
 
 import { config } from './config/index';
 import { errorHandler } from './middleware/errorHandler';
 import { AppError } from './utils/appError';
 import { HttpStatus } from './constants/httpStatusCodes';
+import { apiLimiter, authLimiter, formLimiter } from './middleware/rateLimiter';
 
 // Module Routes
 import authRoutes from './modules/auth/auth.route';
-import brandRoutes from './modules/brand/brand.route';
 import categoryRoutes from './modules/category/category.route';
 import productRoutes from './modules/product/product.route';
 import sparePartRoutes from './modules/sparePart/sparePart.route';
@@ -24,15 +25,21 @@ import blogRoutes from './modules/blog/blog.route';
 import testimonialRoutes from './modules/testimonial/testimonial.route';
 import cmsRoutes from './modules/cms/cms.route';
 import contactRoutes from './modules/contact/contact.route';
+import { feedbackRoutes } from './modules/feedback/feedback.route';
+import { careerRoutes } from './modules/career/career.route';
+import { jobApplicationRoutes } from './modules/jobApplication/jobApplication.route';
 
 const app: Application = express();
 
 // ─── Security & CORS Middleware ───────────────────────────────────────────────
-app.use(
-  helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-  })
-);
+if (config.NODE_ENV !== 'development') {
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    })
+  );
+}
+
 const allowedOrigins = config.CORS_ORIGIN
   ? config.CORS_ORIGIN.split(',').map((o) => o.trim())
   : [];
@@ -40,12 +47,24 @@ const allowedOrigins = config.CORS_ORIGIN
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow all origins to remove cross-origin restrictions for now
-      callback(null, true);
+      // Postman, server-to-server requests
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
+    optionsSuccessStatus: 200,
   })
 );
+
+// Apply general API rate limiter globally
+app.use(apiLimiter);
 
 // ─── Body Parsers ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
@@ -54,19 +73,26 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // ─── API Routes ───────────────────────────────────────────────────────────────
 const API_PREFIX = '/api/v1';
 
-app.use(`${API_PREFIX}/auth`, authRoutes);
-app.use(`${API_PREFIX}/users`, userRoutes);
-app.use(`${API_PREFIX}/brands`, brandRoutes);
+// Auth and User routes are rate limited with authLimiter
+app.use(`${API_PREFIX}/auth`, authLimiter, authRoutes);
+app.use(`${API_PREFIX}/users`, authLimiter, userRoutes);
+
+// Public form submissions are rate limited inside their respective routers
+app.use(`${API_PREFIX}/service-requests`, serviceRequestRoutes);
+app.use(`${API_PREFIX}/contact`, contactRoutes);
+
+// Other resource routes
 app.use(`${API_PREFIX}/categories`, categoryRoutes);
 app.use(`${API_PREFIX}/products`, productRoutes);
 app.use(`${API_PREFIX}/spare-parts`, sparePartRoutes);
 app.use(`${API_PREFIX}/services`, serviceRoutes);
 app.use(`${API_PREFIX}/branches`, branchRoutes);
-app.use(`${API_PREFIX}/service-requests`, serviceRequestRoutes);
 app.use(`${API_PREFIX}/blogs`, blogRoutes);
 app.use(`${API_PREFIX}/testimonials`, testimonialRoutes);
 app.use(`${API_PREFIX}/cms`, cmsRoutes);
-app.use(`${API_PREFIX}/contact`, contactRoutes);
+app.use(`${API_PREFIX}/feedbacks`, feedbackRoutes);
+app.use(`${API_PREFIX}/careers`, careerRoutes);
+app.use(`${API_PREFIX}/job-applications`, jobApplicationRoutes);
 
 // ─── Swagger Docs ────────────────────────────────────────────────────────────
 const swaggerPath = path.join(__dirname, 'swagger', 'swagger.json');
@@ -76,14 +102,18 @@ if (fs.existsSync(swaggerPath)) {
 }
 
 // ─── Health Check ─────────────────────────────────────────────────────────────
-app.get('/health', (_req: Request, res: Response) => {
-  res.status(HttpStatus.OK).json({
-    success: true,
-    message: '🟢 PC INFOTECH API is running.',
+const healthHandler = (_req: Request, res: Response) => {
+  const dbConnected = mongoose.connection.readyState === 1;
+  res.status(dbConnected ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR).json({
+    success: dbConnected,
+    message: dbConnected ? '🟢 PC INFOTECH API is running and database is connected.' : '🔴 Database is disconnected.',
     timestamp: new Date().toISOString(),
     environment: config.NODE_ENV,
   });
-});
+};
+
+app.get('/health', healthHandler);
+app.get(`${API_PREFIX}/health`, healthHandler);
 
 // ─── 404 Catch-All ───────────────────────────────────────────────────────────
 app.use((req: Request, _res: Response, next: NextFunction) => {

@@ -96,6 +96,14 @@ export const authenticateUser = async (
       throw new AppError('The user belonging to this token no longer exists or is deactivated.', HttpStatus.UNAUTHORIZED);
     }
 
+    // Check if user changed password after the token was issued
+    if (user.passwordChangedAt) {
+      const changedTimestamp = Math.floor(user.passwordChangedAt.getTime() / 1000);
+      if (decoded.iat && decoded.iat < changedTimestamp) {
+        throw new AppError('Password was changed recently. Please log in again.', HttpStatus.UNAUTHORIZED);
+      }
+    }
+
     (req as AuthenticatedRequest).user = {
       id: user._id.toString(),
       email: user.email,

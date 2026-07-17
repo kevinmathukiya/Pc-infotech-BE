@@ -3,7 +3,7 @@ import { ICategory } from './category.interface';
 
 const categorySchema = new Schema<ICategory>(
   {
-    brand: { type: Schema.Types.ObjectId, ref: 'Brand', required: true, index: true },
+    brand: { type: String, enum: ['HP', 'Canon'], required: false, index: true },
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, index: true },
     description: { type: String },

@@ -16,7 +16,7 @@ export const createSparePartSchema = z.object({
   body: z.object({
     name: z.string().min(1, 'Spare part name is required'),
     sku: z.string().min(1, 'SKU is required'),
-    brand: z.string().min(1, 'Brand ID is required'),
+    brand: z.enum(['HP', 'Canon']),
     category: z.string().min(1, 'Category ID is required'),
     product: z.string().min(1, 'Product ID is required'),
     description: z.string().optional(),
@@ -61,7 +61,7 @@ export const updateSparePartSchema = z.object({
   body: z.object({
     name: z.string().optional(),
     sku: z.string().optional(),
-    brand: z.string().optional(),
+    brand: z.enum(['HP', 'Canon']).optional(),
     category: z.string().optional(),
     product: z.string().optional(),
     description: z.string().optional(),

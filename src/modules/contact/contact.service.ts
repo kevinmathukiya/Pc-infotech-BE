@@ -13,7 +13,10 @@ export class ContactService {
     const features = new ApiFeatures(Contact.find(), queryObj)
       .filter().search(['name', 'email', 'subject']).sort().limitFields().paginate();
     const contacts = await features.query;
-    const total = await Contact.countDocuments({ isDeleted: false });
+    const total = await Contact.countDocuments({
+      ...features.getFilter(),
+      isDeleted: false,
+    });
     return { contacts, total };
   }
 

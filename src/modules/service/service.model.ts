@@ -5,7 +5,7 @@ const serviceSchema = new Schema<IService>(
   {
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, index: true },
-    brand: { type: Schema.Types.ObjectId, ref: 'Brand', index: true },
+    brand: { type: String, enum: ['HP', 'Canon'], index: true },
     serviceCategory: { type: String, required: true, trim: true },
     shortDescription: { type: String, required: true },
     fullDescription: { type: String, required: true },

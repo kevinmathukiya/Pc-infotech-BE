@@ -7,7 +7,20 @@ export class ApiFeatures<T> {
 
   constructor(query: Query<T[], T>, queryObj: Record<string, any>) {
     this.query = query;
-    this.queryObj = queryObj;
+    this.queryObj = this.sanitize(JSON.parse(JSON.stringify(queryObj || {})));
+  }
+
+  private sanitize(obj: any): any {
+    if (obj instanceof Object) {
+      for (const key in obj) {
+        if (key.startsWith('$')) {
+          delete obj[key];
+        } else {
+          this.sanitize(obj[key]);
+        }
+      }
+    }
+    return obj;
   }
 
   filter() {

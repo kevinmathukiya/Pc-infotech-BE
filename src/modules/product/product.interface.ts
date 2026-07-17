@@ -13,7 +13,7 @@ export interface IAsset {
 export interface IProduct extends Document {
   name: string;
   slug: string;
-  brand: Types.ObjectId;
+  brand: 'HP' | 'Canon';
   category: Types.ObjectId;
   modelNumber: string;
   sku: string;
@@ -26,7 +26,7 @@ export interface IProduct extends Document {
   discountPrice?: number;
   stockQuantity: number;
   images: IAsset[];
-  thumbnail: IAsset;
+  thumbnail?: IAsset;
   brochure?: IAsset;
   status: 'active' | 'inactive';
   isFeatured: boolean;

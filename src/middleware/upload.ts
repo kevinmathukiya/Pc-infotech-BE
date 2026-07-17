@@ -12,6 +12,8 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
     'image/webp',
     'image/gif',
     'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
@@ -19,7 +21,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   } else {
     cb(
       new AppError(
-        'Invalid file type. Only JPEG, PNG, WEBP, GIF, and PDF files are allowed.',
+        'Invalid file type. Only JPEG, PNG, WEBP, GIF, PDF, and Word document (DOC/DOCX) files are allowed.',
         HttpStatus.BAD_REQUEST
       ) as any
     );

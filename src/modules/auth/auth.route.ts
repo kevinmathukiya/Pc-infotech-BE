@@ -22,7 +22,6 @@ router.post('/reset-password', validate(resetPasswordSchema), AuthController.res
 
 // Protected routes
 router.patch('/change-password', authenticateAdmin, validate(changePasswordSchema), AuthController.changePassword);
-router.post('/change-password', authenticateAdmin, validate(changePasswordSchema), AuthController.changePassword);
 router.put('/update-profile', authenticateAdmin, validate(updateProfileSchema), AuthController.updateProfile);
 router.get('/me', authenticateAdmin, AuthController.getMe);
 

@@ -1,7 +1,7 @@
 import { Document, Types } from 'mongoose';
 
 export interface ICategory extends Document {
-  brand: Types.ObjectId;
+  brand?: 'HP' | 'Canon';
   name: string;
   slug: string;
   description?: string;

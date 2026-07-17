@@ -14,7 +14,7 @@ export class BranchService {
       .paginate();
     const branches = await features.query;
     const total = await Branch.countDocuments({
-      ...features.filter().query.getFilter(),
+      ...features.getFilter(),
       isDeleted: false,
     });
     return { branches, total };
@@ -65,7 +65,32 @@ export class BranchService {
       };
     }
 
-    Object.assign(branch, body);
+    const allowedFields = [
+      'name',
+      'branchType',
+      'address',
+      'city',
+      'state',
+      'pincode',
+      'region',
+      'phoneNumber',
+      'email',
+      'googleMapUrl',
+      'workingHours',
+      'supportScope',
+      'status',
+    ];
+
+    allowedFields.forEach((field) => {
+      if (body[field] !== undefined) {
+        (branch as any)[field] = body[field];
+      }
+    });
+
+    if (body.latitude !== undefined) branch.latitude = body.latitude;
+    if (body.longitude !== undefined) branch.longitude = body.longitude;
+    if (body.location !== undefined) branch.location = body.location;
+
     await branch.save();
     return branch;
   }
