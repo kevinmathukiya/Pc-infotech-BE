@@ -9,6 +9,7 @@ export const apiLimiter = rateLimit({
   max: config.NODE_ENV === 'development' ? 10000 : 500,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
   handler: (req, res) => {
     return ApiResponse.error(
       res,
@@ -25,6 +26,7 @@ export const authLimiter = rateLimit({
   max: config.NODE_ENV === 'development' ? 1000 : 30,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
   handler: (req, res) => {
     return ApiResponse.error(
       res,
@@ -41,6 +43,7 @@ export const formLimiter = rateLimit({
   max: config.NODE_ENV === 'development' ? 1000 : 5,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
   handler: (req, res) => {
     return ApiResponse.error(
       res,

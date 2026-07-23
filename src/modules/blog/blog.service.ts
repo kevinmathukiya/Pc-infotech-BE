@@ -11,7 +11,7 @@ export class BlogService {
     if (!adminView) baseFilter.status = 'published';
 
     const features = new ApiFeatures(Blog.find(baseFilter), queryObj)
-      .search(['title', 'tags']).sort().limitFields().paginate();
+      .filter().search(['title', 'tags']).sort().limitFields().paginate();
     const blogs = await features.query;
     const total = await Blog.countDocuments({
       ...features.getFilter(),

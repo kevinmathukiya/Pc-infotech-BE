@@ -25,7 +25,13 @@ router.get('/pending-count', authenticateAdmin, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 router.get('/:id', authenticateAdmin, JobApplicationController.getApplicationById);
-router.patch('/:id/status', authenticateAdmin, JobApplicationController.updateApplicationStatus);
+router.put(
+  '/:id/status',
+  authenticateAdmin,
+  validate(updateJobApplicationStatusSchema),
+  JobApplicationController.updateApplicationStatus
+);
+
 router.delete('/:id', authenticateAdmin, JobApplicationController.deleteApplication);
 
 export const jobApplicationRoutes = router;

@@ -265,7 +265,7 @@ export class SparePartService {
 
     const spareParts = await features.query;
     const total = await SparePart.countDocuments({
-      ...features.filter().query.getFilter(),
+      ...features.getFilter(),
       $or: searchConditions,
       isDeleted: false,
     });
